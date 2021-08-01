@@ -28,7 +28,10 @@ class UnidimensionalConformantArray(NDRType):
     def __bytes__(self) -> bytes:
         return b''.join([
             struct_pack('<I', len(self.representation)),
-            b''.join(bytes(element) for element in self.representation)
+            b''.join(
+                (bytes([element]) if isinstance(element, int) else bytes(element))
+                for element in self.representation
+            )
         ])
 
     def __len__(self) -> int:
