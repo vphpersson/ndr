@@ -1,18 +1,21 @@
 from __future__ import annotations
-from typing import Final, Optional
-from struct import unpack as struct_unpack, pack as struct_pack
+from dataclasses import dataclass, InitVar
+from typing import ClassVar, Optional, ByteString
+from struct import unpack_from, pack
 
 from ndr.structures import NDRType
 
 
 # TODO: The string encoding should be whatever the data representation format label says, no?
+@dataclass
 class ConformantVaryingString(NDRType):
+    STRUCTURE_SIZE: ClassVar[int] = 12
 
-    STRUCTURE_SIZE: Final[int] = 12
+    maximum_count: InitVar[int]
+    offset: int
+    representation: str
 
-    def __init__(self, representation: str = '', offset: int = 0, maximum_count: Optional[int] = None):
-        self.representation: str = representation
-        self.offset: int = offset
+    def __post_init__(self, maximum_count: Optional[int]):
         self._maximum_count: Optional[int] = maximum_count
 
     @property
@@ -29,22 +32,29 @@ class ConformantVaryingString(NDRType):
         self._maximum_count = value
 
     @classmethod
-    def from_bytes(cls, data: bytes) -> ConformantVaryingString:
-        actual_count: int = struct_unpack('<I', data[8:12])[0]
+    def from_bytes(cls, data: ByteString, base_offset: int = 0) -> ConformantVaryingString:
+        data = memoryview(data)[base_offset:]
+        offset = 0
 
-        # TODO: I don't know why the elements are of size 2 -- figure out?
+        maximum_count: int = unpack_from('<I', buffer=data, offset=offset)[0]
+        offset += 4
+
+        string_offset: int = unpack_from('<I', buffer=data, offset=offset)[0]
+        offset += 4
+
+        actual_count: int = unpack_from('<I', buffer=data, offset=offset)[0]
+        offset += 4
+
         # TODO: `str.rstrip` is not right -- only one null character should be removed!
-        return cls(
-            representation=data[12:12+2*actual_count].decode(encoding='utf-16-le').rstrip('\x00'),
-            offset=struct_unpack('<I', data[4:8])[0],
-            maximum_count=struct_unpack('<I', data[:4])[0]
-        )
+        representation: str = bytes(data[offset:offset+2*actual_count]).decode(encoding='utf-16-le').rstrip('\x00')
+
+        return cls(maximum_count=maximum_count, offset=string_offset, representation=representation)
 
     def __bytes__(self) -> bytes:
         return b''.join([
-            struct_pack('<I', self.maximum_count),
-            struct_pack('<I', self.offset),
-            struct_pack('<I', self.actual_count),
+            pack('<I', self.maximum_count),
+            pack('<I', self.offset),
+            pack('<I', self.actual_count),
             self.representation.encode(encoding='utf-16-le') + 2 * b'\x00'
         ])
 
