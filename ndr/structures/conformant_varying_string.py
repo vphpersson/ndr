@@ -13,7 +13,7 @@ class ConformantVaryingString(NDRType):
 
     offset: int
     representation: str
-    maximum_count: InitVar[int]
+    maximum_count: InitVar[Optional[int]] = None
 
     def __post_init__(self, maximum_count: Optional[int]):
         self._maximum_count: Optional[int] = maximum_count
