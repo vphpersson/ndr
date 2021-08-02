@@ -8,7 +8,7 @@ from ndr.structures import NDRType
 
 @dataclass
 class Pointer(NDRType):
-    representation: Union[NDRType, memoryview]
+    representation: Union[NDRType, ByteString]
     referent_id: int = field(default_factory=lambda: next(NDRType._referent_id_iterator))
     structure_size: ClassVar[int] = 4
 
@@ -34,5 +34,5 @@ class Pointer(NDRType):
 # TODO: I want this to be a singleton...
 class NullPointer(Pointer):
     def __init__(self):
-        self.representation = memoryview(b'')
+        self.representation = b''
         self.referent_id = 0
