@@ -1,19 +1,18 @@
 from __future__ import annotations
-from dataclasses import dataclass, InitVar
-from typing import ClassVar, Optional, ByteString
+from typing import Final, Optional, ByteString
 from struct import unpack_from, pack
 
 from ndr.structures import NDRType
 
 
 # TODO: The string encoding should be whatever the data representation format label says, no?
-@dataclass
 class ConformantVaryingString(NDRType):
-    STRUCTURE_SIZE: ClassVar[int] = 12
+    STRUCTURE_SIZE: Final[int] = 12
 
-    representation: str
-    offset: int = 0
-    maximum_count: InitVar[Optional[int]] = None
+    def __init__(self, representation: str = '', offset: int = 0, maximum_count: Optional[int] = None):
+        self.representation: str = representation
+        self.offset: int = offset
+        self._maximum_count: Optional[int] = maximum_count
 
     def __post_init__(self, maximum_count: Optional[int]):
         self._maximum_count: Optional[int] = maximum_count
