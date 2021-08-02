@@ -11,8 +11,8 @@ from ndr.structures import NDRType
 class ConformantVaryingString(NDRType):
     STRUCTURE_SIZE: ClassVar[int] = 12
 
-    offset: int
     representation: str
+    offset: int = 0
     maximum_count: InitVar[Optional[int]] = None
 
     def __post_init__(self, maximum_count: Optional[int]):
