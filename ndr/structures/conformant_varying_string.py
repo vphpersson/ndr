@@ -14,9 +14,6 @@ class ConformantVaryingString(NDRType):
         self.offset: int = offset
         self._maximum_count: Optional[int] = maximum_count
 
-    def __post_init__(self, maximum_count: Optional[int]):
-        self._maximum_count: Optional[int] = maximum_count
-
     @property
     def actual_count(self) -> int:
         # Length of string plus a null byte
