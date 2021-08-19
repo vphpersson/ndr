@@ -1,6 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import ClassVar, Tuple, Union, ByteString
+from typing import ClassVar, Union, ByteString
 from struct import Struct, unpack_from
 
 from ndr.structures import NDRType
@@ -12,7 +12,7 @@ class UnidimensionalConformantArray(NDRType):
 
     _MAXIMUM_COUNT_STRUCT: ClassVar[Struct] = Struct('<I')
 
-    representation: Tuple[Union[NDRType, bytes], ...]
+    representation: Union[tuple[Union[NDRType, bytes], ...], bytes]
 
     @classmethod
     def from_bytes(cls, data: ByteString, base_offset: int = 0, size_per_element: int = 1) -> UnidimensionalConformantArray:
@@ -20,12 +20,14 @@ class UnidimensionalConformantArray(NDRType):
         offset = 0
 
         maximum_count: int = cls._MAXIMUM_COUNT_STRUCT.unpack_from(buffer=data, offset=offset)[0]
-        return cls(
-            representation=tuple(
-                bytes(unpack_from(size_per_element * 'B', buffer=data, offset=offset+i*size_per_element))
-                for i in range(maximum_count)
-            )
+        offset += cls._MAXIMUM_COUNT_STRUCT.size
+
+        representation_tuple: tuple[bytes, ...] = tuple(
+            bytes(unpack_from(size_per_element * 'B', buffer=data, offset=offset+i*size_per_element))
+            for i in range(maximum_count)
         )
+
+        return cls(representation=b''.join(representation_tuple) if size_per_element == 1 else representation_tuple)
 
     def __bytes__(self) -> bytes:
         return b''.join([

@@ -9,3 +9,6 @@ class NDRType(ABC):
     @abstractmethod
     def __bytes__(self) -> bytes:
         raise NotImplementedError
+
+    def __len__(self) -> int:
+        return len(self.__bytes__())
